@@ -54,33 +54,84 @@ module.exports = function (app) {
 
     .delete(async function (req, res) {
       try {
+        // delete all books in the database
         const result = await book_model.deleteMany({});
+
         if (result.deletedCount > 0) {
+          //The returned response will be the string complete delete successful if successful
           return res.status(200).send("complete delete successful");
         } else {
           return res.status(404).json({ error: "No books found to delete" });
         }
       } catch (error) {
-        console.error(error);
         return res.status(500).json({ error: "Internal server error" });
       }
     });
 
   app
     .route("/api/books/:id")
-    .get(function (req, res) {
+    .get(async function (req, res) {
       let bookid = req.params.id;
-      //json res format: {"_id": bookid, "title": book_title, "comments": [comment,comment,...]}
+
+      const book = await book_model.findById(bookid);
+
+      if (!book) {
+        return res.send("no book exists");
+      }
+
+      return res.json({
+        _id: bookid,
+        title: book.title,
+        comments: book.comments || [],
+      });
     })
 
-    .post(function (req, res) {
-      let bookid = req.params.id;
-      let comment = req.body.comment;
-      //json res format same as .get
+    .post(async function (req, res) {
+      try {
+        let bookid = req.params.id;
+        let comment = req.body.comment;
+        // console.log(bookid);
+        // console.log(comment);
+        //If comment is not included in the request, return the string missing required field comment
+        if (!comment) {
+          return res.send("missing required field comment");
+        }
+
+        let book = await book_model.findById(bookid);
+
+        //If no book is found, return the string no book exists.
+        if (!book) {
+          return res.send("no book exists");
+        }
+
+        book.comments.push(comment);
+        const updatedBook = await book.save();
+        console.log(updatedBook);
+        return res.json({
+          _id: bookid,
+          title: updatedBook.title,
+          comments: updatedBook.comments,
+          commentcount: updatedBook.comments.length,
+        });
+      } catch (error) {
+        res.send(500).json({ error: "Internal server error" });
+      }
     })
 
-    .delete(function (req, res) {
-      let bookid = req.params.id;
-      //if successful response will be 'delete successful'
+    .delete(async function (req, res) {
+      try {
+        let bookid = req.params.id;
+
+        const deletedBook = await book_model.findByIdAndDelete(bookid);
+        //If no book is found, return the string no book exists.
+        if (!deletedBook) {
+          return res.send("no book exists");
+        }
+
+        //if successful response will be 'delete successful'
+        return res.send("delete successful");
+      } catch (error) {
+        return res.status(500).send("Internal server error");
+      }
     });
 };
