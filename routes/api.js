@@ -48,7 +48,7 @@ module.exports = function (app) {
         //The returned response will be an object with the title and a unique _id as keys.
         res.json({ title: book.title, _id: book._id });
       } catch (error) {
-        console.log(error);
+        return res.status(500).json({ error: "Internal server error" });
       }
     })
 
@@ -90,8 +90,7 @@ module.exports = function (app) {
       try {
         let bookid = req.params.id;
         let comment = req.body.comment;
-        // console.log(bookid);
-        // console.log(comment);
+
         //If comment is not included in the request, return the string missing required field comment
         if (!comment) {
           return res.send("missing required field comment");
@@ -106,7 +105,7 @@ module.exports = function (app) {
 
         book.comments.push(comment);
         const updatedBook = await book.save();
-        console.log(updatedBook);
+
         return res.json({
           _id: bookid,
           title: updatedBook.title,
