@@ -1,3 +1,7 @@
 {
-  "workbench.colorTheme": "freeCodeCamp Dark Theme"
+  "workbench.colorTheme": "freeCodeCamp Dark Theme",
+  "cSpell.words": [
+    "bookid",
+    "commentcount"
+  ]
 }
