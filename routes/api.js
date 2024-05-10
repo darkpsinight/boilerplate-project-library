@@ -46,7 +46,7 @@ module.exports = function (app) {
         const book = await newBook.save();
 
         //The returned response will be an object with the title and a unique _id as keys.
-        res.json({ title: book.title, _id: book._id });
+        return res.send({ title: book.title, _id: book._id });
       } catch (error) {
         return res.status(500).json({ error: "Internal server error" });
       }
@@ -60,8 +60,6 @@ module.exports = function (app) {
         if (result.deletedCount > 0) {
           //The returned response will be the string complete delete successful if successful
           return res.status(200).send("complete delete successful");
-        } else {
-          return res.status(404).json({ error: "No books found to delete" });
         }
       } catch (error) {
         return res.status(500).json({ error: "Internal server error" });
@@ -71,19 +69,23 @@ module.exports = function (app) {
   app
     .route("/api/books/:id")
     .get(async function (req, res) {
-      let bookid = req.params.id;
+      try {
+        let bookid = req.params.id;
 
-      const book = await book_model.findById(bookid);
+        const book = await book_model.findById(bookid);
 
-      if (!book) {
-        return res.send("no book exists");
+        if (!book) {
+          return res.send("no book exists");
+        }
+
+        return res.json({
+          _id: bookid,
+          title: book.title,
+          comments: book.comments || [],
+        });
+      } catch (error) {
+        return res.status(500).json({ error: "Internal server error" });
       }
-
-      return res.json({
-        _id: bookid,
-        title: book.title,
-        comments: book.comments || [],
-      });
     })
 
     .post(async function (req, res) {
@@ -113,7 +115,7 @@ module.exports = function (app) {
           commentcount: updatedBook.comments.length,
         });
       } catch (error) {
-        res.send(500).json({ error: "Internal server error" });
+        return res.status(500).json({ error: "Internal server error" });
       }
     })
 
